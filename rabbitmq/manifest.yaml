@@ -1,0 +1,100 @@
+# Secret resource for password
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq
+  labels:
+    component: rabbitmq
+    project: roboshop
+    tier: database
+type: Opaque
+data:
+  RABBITMQ_DEFAULT_USER: "cm9ib3Nob3A="
+  RABBITMQ_DEFAULT_PASS: "cm9ib3Nob3AxMjM="
+---
+# Headless Service - No ClusterIP, for internal communication between pods in a StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-headless
+  namespace: roboshop
+  labels:
+    component: rabbitmq
+    project: roboshop
+    tier: database
+spec:
+  clusterIP: None
+  selector:
+    component: rabbitmq
+    project: roboshop
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 5672 # service port
+    targetPort: 5672 # container port
+---
+# Normal Service to allow trafice for internet to connect redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: roboshop
+  labels:
+    component: rabbitmq
+    project: roboshop
+    tier: database
+spec:
+  selector:
+    component: rabbitmq
+    project: roboshop
+    tier: database
+  ports:
+  - protocol: TCP
+    port: 5672 # service port
+    targetPort: 5672 # container port
+---
+# StaefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  namespace: roboshop
+  labels:
+    component: rabbitmq
+    project: roboshop
+    tier: database
+spec:
+  selector:
+    matchLabels:
+      component: rabbitmq
+      project: roboshop
+      tier: database # has to match .spec.template.metadata.labels
+  serviceName: "rabbitmq-headless" # this should be headless service
+  replicas: 2 # by default is 1
+  template:
+    metadata:
+      labels:
+        component: rabbitmq
+        project: roboshop
+        tier: database
+    spec:
+      containers:
+      - name: rabbitmq
+        image: rabbitmq:3
+        envFrom:
+        - secretRef:
+            name: rabbitmq
+        volumeMounts:
+        - name: rabbitmq-data
+          mountPath: /var/lib/rabbitmq
+  # This is nothing but PVC, you can directly create here
+    # This ensures that each replica gets its own PersistentVolume (EBS disk, typically).
+  volumeClaimTemplates:
+  - metadata:
+      name: rabbitmq-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "roboshop-ebs"
+      resources:
+        requests:
+          storage: 2Gi
