@@ -141,6 +141,7 @@ spec:
     port: 80 # service port
     targetPort: 8080 # container port
 ---
+# Horizontal Pod Auto Scaling
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
