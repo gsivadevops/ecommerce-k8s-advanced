@@ -88,7 +88,7 @@ spec:
         - name: rabbitmq-data
           mountPath: /var/lib/rabbitmq
   # This is nothing but PVC, you can directly create here
-    # This ensures that each replica gets its own PersistentVolume (EBS disk, typically).
+  # This ensures that each replica gets its own PersistentVolume (EBS disk, typically).
   volumeClaimTemplates:
   - metadata:
       name: rabbitmq-data
