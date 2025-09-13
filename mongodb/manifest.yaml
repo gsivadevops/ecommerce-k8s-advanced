@@ -71,7 +71,7 @@ spec:
         - name: mongodb-data
           mountPath: /data/db
   # This is nothing but PVC, you can directly create here
-    # This ensures that each replica gets its own PersistentVolume (EBS disk, typically).
+  # This ensures that each replica gets its own PersistentVolume (EBS disk, typically).
   volumeClaimTemplates:
   - metadata:
       name: mongodb-data
